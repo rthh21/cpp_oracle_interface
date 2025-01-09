@@ -24,13 +24,14 @@ public:
     int checkOCIStatus(sword status);
     
     void get_column_count(OCIStmt* stmt, OCIError* err);
-    void print_column(OCIStmt* stmt, OCIError* err, int &column_index);
+    void print_column(OCIStmt* stmt, OCIError* err, int column_index);
     void print_columns(OCIStmt* stmt, OCIError* err); 
     void list_column_table(const std::string& table_name, int column_index);
     void list_all_columns_table(const std::string& table_name);
     void list_all_tables();
     
-    void sort_table(const std::string& table_name, const std::string& column_name, const std::string &type_of_sort);
+    void sort_table(const std::string& table_name, const std::string& column_name, const std::string& type_of_sort);
+    void modify(const std::string& table_name, const std::string& id, const std::string& attribute, const std::string& value, const std::string& type);
     ~baza();
 };
 

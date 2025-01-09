@@ -21,8 +21,8 @@ void baza::init() {
     OCIHandleAlloc(env, (void **)&err, OCI_HTYPE_ERROR, 0, NULL);
     OCIHandleAlloc(env, (void **)&svc, OCI_HTYPE_SVCCTX, 0, NULL);
     OCILogon(env, err, &svc, (text *)"system", strlen("system"),
-             (text *)"1379", strlen("1379"),
-             (text *)"localhost", strlen("localhost"));
+                      (text *)"1379", strlen("1379"),
+                      (text *)"localhost", strlen("localhost"));
     OCIHandleAlloc(env, (void **)&stmt, OCI_HTYPE_STMT, 0, NULL);
     tables = {"angajat", "departament", "pozitie", "pregatire", "proiect",
               "sarcina", "recenzie_de_performanta", "recrutare"};
@@ -49,7 +49,7 @@ void baza::get_column_count(OCIStmt* stmt, OCIError* err) {
     }
 }
 
-void baza::print_column(OCIStmt* stmt, OCIError* err, int &column_index){
+void baza::print_column(OCIStmt* stmt, OCIError* err, int column_index){
     char col[500];
     OCIDefineByPos(stmt, &defn, err, column_index, col, sizeof(col), SQLT_STR, NULL, NULL, NULL, OCI_DEFAULT);
     OCIStmtExecute(svc, stmt, err, column_index, 0, NULL, NULL, OCI_DEFAULT);
@@ -108,17 +108,36 @@ void baza::list_all_tables() {
 }
 
 void baza::sort_table(const std::string& table_name, const std::string& column_name, const std::string &type_of_sort){
-    // Build the SQL query
     std::string sql_query = "SELECT * FROM " + table_name + " ORDER BY " + column_name + " " + type_of_sort;
-    
-    // Prepare the statement
     OCIStmtPrepare(stmt, err, (text*)sql_query.c_str(), sql_query.length(), OCI_NTV_SYNTAX, OCI_DEFAULT);
-    
-    // Execute the query
-    status = OCIStmtExecute(svc, stmt, err, 0, 0, NULL, NULL, OCI_DEFAULT);
-    
-    // Fetch and print the sorted results
+    OCIStmtExecute(svc, stmt, err, 0, 0, NULL, NULL, OCI_DEFAULT);
+
     print_columns(stmt,err);
+}
+
+void baza::modify(const std::string& table_name, const std::string& id, const std::string& attribute, const std::string& value, const std::string& type){
+    int ok=1;
+    std::string sql_query;
+    if(type == "NUMBER" || type == "INT" || type == "DATE"){
+        sql_query = "UPDATE " + table_name + " SET " + attribute + " = "+ value
+                    + " WHERE id_" + table_name + " = " + id + ";";
+        ok=0;
+    } else if(type == "DATE"){
+        sql_query = "UPDATE " + table_name + " SET " + attribute + " ='" + value
+                    + "' WHERE id_" + table_name + " = " + id;
+        ok=0;
+    } else {
+        std::cout<<"Error! >"<<type<<'\n';
+    }
+    
+    if(ok == 0){
+        std::cout<<sql_query<<"\n";
+        sql_query = "UPDATE DEPARTAMENT SET buget = 23211 WHERE id_departament = 1;";
+        OCIStmtPrepare(stmt, err, (text*)sql_query.c_str(), sql_query.length(), OCI_NTV_SYNTAX, OCI_DEFAULT);
+        OCIStmtExecute(svc, stmt, err, 1, 0, NULL, NULL, OCI_COMMIT_ON_SUCCESS );
+        
+        list_all_columns_table(table_name);
+    }
 }
 
 baza::~baza() {
